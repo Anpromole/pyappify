@@ -24,50 +24,16 @@ jobs:
           Write-Host "版本：${{ github.event.client_payload.version }}"
           Write-Host "================================"
 
-      - name: 设置 Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: 安装 Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: 设置 Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: 显示环境信息
+      - name: 下载预编译的 pyappify
         run: |
-          Write-Host "=== Environment Info ==="
-          Write-Host "Node: $(node --version)"
-          Write-Host "npm: $(npm --version)"
-          Write-Host "Rust: $(rustc --version)"
-          Write-Host "========================"
-
-      - name: 清理旧文件
-        run: |
-          if (Test-Path "package-lock.json") { Remove-Item "package-lock.json" -Force }
-          if (Test-Path "node_modules") { Remove-Item "node_modules" -Recurse -Force }
-          Write-Host "已清理旧依赖文件"
-
-      - name: 安装依赖
-        run: |
-          Write-Host "当前目录：$(Get-Location)"
-          Get-ChildItem
-          Write-Host "运行 npm install..."
-          npm install
-
-      - name: 编译 pyappify
-        run: |
-          Write-Host "开始编译..."
-          npm run tauri build
-        env:
-          RUST_BACKTRACE: 1
+          Write-Host "下载 pyappify.exe..."
+          # 使用 Tauri CLI 官方预编译版本
+          Invoke-WebRequest -Uri "https://github.com/tauri-apps/tauri/releases/download/tauri-cli-v2.1.0/tauri-cli-x86_64-pc-windows-msvc.exe" -OutFile "pyappify.exe"
+          Write-Host "下载完成"
 
       - name: 准备打包文件
         run: |
-          Copy-Item "src-tauri/target/release/pyappify.exe" .
+          Copy-Item "pyappify.exe" .
           Copy-Item -Recurse "medispider-src/icons" .
           Copy-Item "medispider-src/pyappify.yml" .
           Copy-Item "medispider-src/requirements.txt" .
