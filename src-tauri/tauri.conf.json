@@ -2,12 +2,10 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "pyappify",
   "version": "0.0.1",
-  "identifier": "pyappify",
+  "identifier": "com.pyappify.app",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
-    "frontendDist": "../dist"
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420"
   },
   "app": {
     "windows": [
@@ -15,7 +13,8 @@
         "title": "pyappify",
         "width": 800,
         "height": 600,
-        "visible": false
+        "resizable": true,
+        "fullscreen": false
       }
     ],
     "security": {
@@ -24,16 +23,13 @@
   },
   "bundle": {
     "active": true,
-    "targets": "nsis",
-    "icon": ["icons/icon.ico", "icons/icon.png"],
-    "resources": ["data"],
-    "windows": {
-      "nsis": {
-        "template": "nsis/installer.nsi",
-        "displayLanguageSelector": true,
-        "installerIcon": "icons/icon.ico",
-        "languages": ["SimpChinese", "TradChinese", "English", "Korean", "Japanese"]
-      }
-    }
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
   }
 }

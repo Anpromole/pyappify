@@ -10,10 +10,10 @@ name = "pyappify_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.5.1", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2.9.2", features = ["tray-icon"] }
+tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

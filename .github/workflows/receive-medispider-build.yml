@@ -50,28 +50,28 @@ jobs:
           Write-Host "Rust: $(rustc --version)"
           Write-Host "========================"
 
-      - name: 安装 Tauri CLI
+      - name: 安装依赖
         run: |
-          Write-Host "Installing Tauri CLI..."
-          pnpm add -D @tauri-apps/cli
-          Write-Host "Tauri CLI installed"
+          Write-Host "当前目录：$(Get-Location)"
+          Get-ChildItem
+          pnpm install
 
-      - name: 创建简单前端
+      - name: 创建 dist 目录
         run: |
-          Write-Host "Creating simple frontend..."
+          New-Item -ItemType Directory -Force -Path "dist"
           @"
           <!DOCTYPE html>
           <html>
           <head><meta charset='UTF-8'><title>pyappify</title></head>
-          <body><h1>pyappify</h1></body>
+          <body><h1>pyappify</h1><p>MediaSpider Package Builder</p></body>
           </html>
-          "@ | Out-File -FilePath "index.html" -Encoding utf8
-          Write-Host "Frontend created"
+          "@ | Out-File -FilePath "dist/index.html" -Encoding utf8
+          Write-Host "dist 目录创建完成"
 
       - name: 编译 pyappify
         run: |
           Write-Host "Building pyappify..."
-          pnpm tauri build
+          pnpm tauri build --verbose
         env:
           RUST_BACKTRACE: 1
 
@@ -79,6 +79,7 @@ jobs:
         run: |
           if (Test-Path "src-tauri/target/release/pyappify.exe") {
             Copy-Item "src-tauri/target/release/pyappify.exe" .
+            Write-Host "pyappify.exe 已复制"
           } else {
             Write-Host "pyappify.exe not found, searching..."
             Get-ChildItem -Recurse -Filter "pyappify.exe" | ForEach-Object { Write-Host $_.FullName }
