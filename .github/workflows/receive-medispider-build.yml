@@ -1,0 +1,96 @@
+# Receive MediaSpider Build Trigger
+name: Receive MediaSpider Build
+
+on:
+  repository_dispatch:
+    types: [build-medispider]
+
+jobs:
+  build-medispider:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: 检出 MediaSpider 代码
+        uses: actions/checkout@v4
+        with:
+          repository: Anpromole/MediaSpider
+          path: medispider-src
+
+      - name: 显示构建信息
+        run: |
+          Write-Host "=== 开始构建 MediaSpider ==="
+          Write-Host "版本：${{ github.event.client_payload.version }}"
+          Write-Host "================================"
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 安装 Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 显示环境信息
+        run: |
+          Write-Host "=== Environment Info ==="
+          Write-Host "Node: $(node --version)"
+          Write-Host "npm: $(npm --version)"
+          Write-Host "Rust: $(rustc --version)"
+          Write-Host "========================"
+
+      - name: 清理旧文件
+        run: |
+          if (Test-Path "pnpm-lock.yaml") { Remove-Item "pnpm-lock.yaml" -Force }
+          if (Test-Path "package-lock.json") { Remove-Item "package-lock.json" -Force }
+          if (Test-Path "node_modules") { Remove-Item "node_modules" -Recurse -Force }
+          Write-Host "已清理旧依赖文件"
+
+      - name: 安装依赖 (使用 npm)
+        run: |
+          Write-Host "当前目录：$(Get-Location)"
+          Get-ChildItem
+          Write-Host "运行 npm install..."
+          npm install --legacy-peer-deps --verbose
+        env:
+          npm_config_loglevel: verbose
+
+      - name: 编译 pyappify
+        run: |
+          Write-Host "开始编译..."
+          npm run tauri build
+        env:
+          RUST_BACKTRACE: 1
+
+      - name: 准备打包文件
+        run: |
+          Copy-Item "src-tauri/target/release/pyappify.exe" .
+          Copy-Item -Recurse "medispider-src/icons" .
+          Copy-Item "medispider-src/pyappify.yml" .
+          Copy-Item "medispider-src/requirements.txt" .
+          Copy-Item "medispider-src/main.py" .
+          Copy-Item "medispider-src/config.py" .
+          Copy-Item "medispider-src/threads.py" .
+          Copy-Item "medispider-src/widgets.py" .
+          Copy-Item -Recurse "medispider-src/spider"
+          Write-Host "文件已复制"
+
+      - name: 创建 Windows 安装包
+        run: |
+          Compress-Archive -Path @("pyappify.exe","pyappify.yml","icons","requirements.txt","main.py","config.py","threads.py","widgets.py","spider") -DestinationPath "MediaSpider-${{ github.event.client_payload.version }}-windows.zip"
+          Write-Host "压缩包已创建"
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.client_payload.version }}
+          name: MediaSpider v${{ github.event.client_payload.version }}
+          files: MediaSpider-${{ github.event.client_payload.version }}-windows.zip
+          generate_release_notes: true
+          token: ${{ secrets.PYAPPIFY_PAT }}
