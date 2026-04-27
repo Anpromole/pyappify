@@ -24,16 +24,65 @@ jobs:
           Write-Host "版本：${{ github.event.client_payload.version }}"
           Write-Host "================================"
 
-      - name: 下载预编译的 pyappify
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 安装 Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: 显示环境信息
         run: |
-          Write-Host "下载 pyappify.exe..."
-          # 使用 Tauri CLI 官方预编译版本
-          Invoke-WebRequest -Uri "https://github.com/tauri-apps/tauri/releases/download/tauri-cli-v2.1.0/tauri-cli-x86_64-pc-windows-msvc.exe" -OutFile "pyappify.exe"
-          Write-Host "下载完成"
+          Write-Host "=== Environment Info ==="
+          Write-Host "Node: $(node --version)"
+          Write-Host "pnpm: $(pnpm --version)"
+          Write-Host "Rust: $(rustc --version)"
+          Write-Host "========================"
+
+      - name: 安装 Tauri CLI
+        run: |
+          Write-Host "Installing Tauri CLI..."
+          pnpm add -D @tauri-apps/cli
+          Write-Host "Tauri CLI installed"
+
+      - name: 创建简单前端
+        run: |
+          Write-Host "Creating simple frontend..."
+          @"
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset='UTF-8'><title>pyappify</title></head>
+          <body><h1>pyappify</h1></body>
+          </html>
+          "@ | Out-File -FilePath "index.html" -Encoding utf8
+          Write-Host "Frontend created"
+
+      - name: 编译 pyappify
+        run: |
+          Write-Host "Building pyappify..."
+          pnpm tauri build
+        env:
+          RUST_BACKTRACE: 1
 
       - name: 准备打包文件
         run: |
-          Copy-Item "pyappify.exe" .
+          if (Test-Path "src-tauri/target/release/pyappify.exe") {
+            Copy-Item "src-tauri/target/release/pyappify.exe" .
+          } else {
+            Write-Host "pyappify.exe not found, searching..."
+            Get-ChildItem -Recurse -Filter "pyappify.exe" | ForEach-Object { Write-Host $_.FullName }
+          }
           Copy-Item -Recurse "medispider-src/icons" .
           Copy-Item "medispider-src/pyappify.yml" .
           Copy-Item "medispider-src/requirements.txt" .
