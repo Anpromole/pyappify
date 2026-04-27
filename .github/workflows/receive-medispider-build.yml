@@ -45,11 +45,11 @@ jobs:
           Write-Host "Rust: $(rustc --version)"
           Write-Host "========================"
 
-      - name: 安装依赖
+      - name: 安装 Tauri CLI
         run: |
-          Write-Host "当前目录：$(Get-Location)"
-          Get-ChildItem
-          npm install --legacy-peer-deps
+          Write-Host "Installing Tauri CLI globally..."
+          npm install -g @tauri-apps/cli
+          Write-Host "Tauri CLI installed"
 
       - name: 创建 dist 目录
         run: |
@@ -66,7 +66,7 @@ jobs:
       - name: 编译 pyappify
         run: |
           Write-Host "Building pyappify..."
-          npx tauri build --verbose
+          tauri build --verbose
         env:
           RUST_BACKTRACE: 1
 
